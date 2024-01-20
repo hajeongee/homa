@@ -507,26 +507,33 @@ void init_server_addrs(void)
 	for (int node = first_server; node < first_server + server_nodes;
 			node++) {
 		char host[100];
-		struct addrinfo hints;
-		struct addrinfo *matching_addresses;
+		// struct addrinfo hints;
+		// struct addrinfo *matching_addresses;
+		struct sockaddr_in server_info;
 		sockaddr_in_union *dest;
 
 		if (node == id)
 			continue;
-		snprintf(host, sizeof(host), "node%d", node);
-		memset(&hints, 0, sizeof(struct addrinfo));
-		hints.ai_family = inet_family;
-		hints.ai_socktype = SOCK_DGRAM;
-		int status = getaddrinfo(host, NULL, &hints,
-				&matching_addresses);
-		if (status != 0) {
-			log(NORMAL, "FATAL: couldn't look up address "
-					"for %s: %s\n",
-					host, gai_strerror(status));
-			exit(1);
+		snprintf(host, sizeof(host), "10.0.0.%d", node + 1);
+		log(NORMAL, "init server\n");
+		server_info.sin_family = inet_family;
+		if (inet_pton(inet_family, host, &server_info.sin_addr) <= 0){
+			log(NORMAL, "Failed to convert IP address\n");
 		}
+
+		// memset(&hints, 0, sizeof(struct addrinfo));
+		// hints.ai_family = inet_family;
+		// hints.ai_socktype = SOCK_DGRAM;
+		// int status = getaddrinfo(host, NULL, &hints,
+		// 		&matching_addresses);
+		// if (status != 0) {
+		// 	log(NORMAL, "FATAL: couldn't look up address "
+		// 			"for %s: %s\n",
+		// 			host, gai_strerror(status));
+		// 	exit(1);
+		// }
 		dest = reinterpret_cast<sockaddr_in_union *>
-				(matching_addresses->ai_addr);
+				(&server_info);
 		while (((int) first_id.size()) < node)
 			first_id.push_back(-1);
 		first_id.push_back((int) server_addrs.size());
@@ -537,7 +544,7 @@ void init_server_addrs(void)
 		}
 		while (((int) freeze.size()) <= node)
 			freeze.push_back(0);
-		freeaddrinfo(matching_addresses);
+		// freeaddrinfo(matching_addresses);
 	}
 }
 
